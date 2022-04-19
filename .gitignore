@@ -159,3 +159,6 @@ docs/
 
 # TODO list
 todo.txt
+
+# CSV файлы
+*.csv
