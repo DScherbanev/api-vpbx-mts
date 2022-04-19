@@ -2,6 +2,7 @@ import requests
 import os
 import json
 import csv
+import boto3
 # import pprint
 from datetime import datetime
 from dotenv import load_dotenv
@@ -14,6 +15,14 @@ CALL_REC_ENDPOINT = 'https://vpbx.mts.ru/api/callRecording/mp3/'
 PAGE_SIZE = 10
 DATE_FROM = '01/01/2022'
 DATE_TO = '19/04/2022'
+BUCKET = 'test'
+
+
+session = boto3.Session(
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+)
+s3 = session.resource('s3', endpoint_url='https://s3mts.ru')
 
 
 def date_to_timestamp(date_time):
@@ -65,6 +74,31 @@ def save_call_record_mp3(call_id, calling_num, called_num, call_time_ts, call_du
     #     print('Код ответа:', response.status_code)
 
 
+def save_call_record_mp3_to_S3(call_id, calling_num, called_num, call_time_ts, call_duration):
+    rec_params = {
+        'X-AUTH-TOKEN': VPBX_API_TOKEN,
+        'cache-control': 'no-cache'
+    }
+    response = requests.get(CALL_REC_ENDPOINT + call_id,
+                            params=rec_params, allow_redirects=True)
+    if response.status_code == 200:
+        filename = (calling_num + '_' + called_num + '_' +
+                    timestamp_to_date_time(call_time_ts) +
+                    '_' + str(call_duration) + '.mp3')
+
+        open(filename, 'wb').write(response.content)
+        s3.meta.client.upload_file(Filename=filename, Bucket=BUCKET, Key=filename)
+
+        # TODO: необходимо попробовать отправлять файлы как объекты без промежуточного хранения
+        # # Upload a new file
+        # data = open('test.jpg', 'rb')
+        # s3.Bucket('my-bucket').put_object(Key='test.jpg', Body=data)
+
+        print('Записан файл:', filename)
+    # else:
+    #     print('Код ответа:', response.status_code)
+
+
 def main():
     total_elements, total_pages, call_history = get_api_response(0)
 
@@ -88,8 +122,16 @@ def main():
                 call_time_ts = call_history[element]['callTime']
                 call_duration = call_history[element]['duration']
                 # print(call_id, calling_num, called_num, timestamp_to_date_time(call_time_ts), call_duration)
-                save_call_record_mp3(call_id, calling_num,
+
+                # Запись файла на диск
+                #save_call_record_mp3(call_id, calling_num,
+                #                     called_num, call_time_ts, call_duration)
+
+                # Запись файлов в S3 хранилище
+                save_call_record_mp3_to_S3(call_id, calling_num,
                                      called_num, call_time_ts, call_duration)
+
+
                 writer.writerow(call_history[element])
 
 
