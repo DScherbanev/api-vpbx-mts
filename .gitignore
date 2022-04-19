@@ -156,3 +156,6 @@ docs/
 # MP3, WAV файлы
 *.mp3
 *.wav
+
+# TODO list
+todo.txt

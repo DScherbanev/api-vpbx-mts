@@ -1,4 +1,3 @@
-#import time
 import requests
 import os
 import json
@@ -11,7 +10,7 @@ load_dotenv()
 VPBX_API_TOKEN = os.getenv('VPBX_API_TOKEN')
 CALL_HISTORY_ENDPOINT = 'https://vpbx.mts.ru/api/v1/callHistory/enterprise'
 CALL_REC_ENDPOINT = 'https://vpbx.mts.ru/api/callRecording/mp3/'
-PAGE_SIZE = 50
+PAGE_SIZE = 10
 DATE_FROM = '2022/01/01'
 DATE_TO = '2022/04/11'
 
@@ -39,16 +38,19 @@ def main():
         'X-AUTH-TOKEN': VPBX_API_TOKEN,
         'cache-control': 'no-cache'
     }
+
     response = requests.get(CALL_HISTORY_ENDPOINT, params=params)
     total_elements = response.json()['totalElements']
     total_pages = response.json()['totalPages']
-
     call_history = response.json()['content']
+    elements_on_page = len(call_history)
+
 
     print('totalElements', total_elements)
     print('Pages', total_pages)
+    print('Elements on page', elements_on_page)
 
-    n = 10
+    n = 3
 
     call_id = call_history[n]['extTrackingId']
     calling_num = call_history[n]['callingNumber']
