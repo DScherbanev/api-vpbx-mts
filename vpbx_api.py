@@ -14,7 +14,7 @@ CALL_HISTORY_ENDPOINT = 'https://vpbx.mts.ru/api/v1/callHistory/enterprise'
 CALL_REC_ENDPOINT = 'https://vpbx.mts.ru/api/callRecording/mp3/'
 PAGE_SIZE = 10
 DATE_FROM = '01/01/2022'
-DATE_TO = '19/04/2022'
+DATE_TO = '20/04/2022'
 BUCKET = 'test'
 
 
